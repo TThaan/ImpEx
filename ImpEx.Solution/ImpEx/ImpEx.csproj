@@ -8,4 +8,10 @@
     <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Reference Include="ObjectFlattener">
+      <HintPath>..\..\..\ObjectFlattener\ObjectFlattener\bin\Debug\netcoreapp3.1\ObjectFlattener.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+
 </Project>
