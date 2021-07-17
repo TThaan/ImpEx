@@ -78,13 +78,16 @@ namespace ImpEx
 
                 StringBuilder sb = new StringBuilder();
 
-                for (int i = 0; i < flattenedDataCount; i++)
+                for (int i = 1; i <= flattenedDataCount; i++)
                 {
-                    // Add line skip after each n-th (= 'columns-th') item to create multiple rows.
-                    if (i != 0 && i % columns == 0)
+                    sb.Append(flattenedData.ElementAt(i - 1).ToString());
+
+                    // Add line skip after each n-th (= 'columns-th') item to create multiple rows
+                    if (i % columns == 0)
                         sb.Append("\n");
-                    sb.Append(flattenedData.ElementAt(i).ToString());
-                    sb.Append(separator);
+                    // else add a separator.
+                    else
+                        sb.Append(separator);
                 }
 
                 // Remove last comma
