@@ -4,7 +4,9 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
+using System.Linq;
 using System.Runtime.Serialization.Formatters.Binary;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -31,27 +33,29 @@ namespace ImpEx
             string json = JsonConvert.SerializeObject(data);
             await File.AppendAllTextAsync(fileName, json);
         }
-        public static async Task<string> SaveAsCSVAsync<T>(IEnumerable<T> data, string fileName, bool overWriteExistingFile = false)
+        public static async Task<string> SaveAsCSVAsync<T>(IEnumerable<T> data, string fileName, int columns, bool overWriteExistingFile = false)
         {
             string completeFileName = GetFileName(fileName, ".csv");
             DeleteExistingFileIfWanted(completeFileName, overWriteExistingFile);
-            await SaveAsTextAsync(data, completeFileName, ", ");
+            await SaveAsTextAsync(data, completeFileName, columns, ", ");
             return completeFileName;
         }
-        public static async Task<string> SaveAsTSVAsync<T>(IEnumerable<T> data, string fileName, bool overWriteExistingFile = false)
+        public static async Task<string> SaveAsTSVAsync<T>(IEnumerable<T> data, string fileName, int columns, bool overWriteExistingFile = false)
         {
             string completeFileName = GetFileName(fileName, ".tsv");
             DeleteExistingFileIfWanted(completeFileName, overWriteExistingFile);
-            await SaveAsTextAsync(data, completeFileName, "\t");
+            await SaveAsTextAsync(data, completeFileName, columns, "\t");
             return completeFileName;
         }
 
         #region helpers
 
-        private static string GetFileName(string fileName, string fileNameSuffix)
+        private static string GetFileName(string fileName, string wantedFileNameSuffix)
         {
-            if (!fileName.Split('.').Length.Equals(fileNameSuffix))
-                fileName += fileNameSuffix;
+            string currentSuffix = '.' + fileName.Split('.').Last();
+
+            if (!currentSuffix.Equals(wantedFileNameSuffix))
+                fileName += wantedFileNameSuffix;
 
             return fileName;
         }
@@ -62,17 +66,31 @@ namespace ImpEx
             else if (File.Exists(fileName) && !overWriteExistingFile)
                 throw new ArgumentException($"{fileName} already exists.");
         }
-        private static async Task SaveAsTextAsync<T>(IEnumerable<T> data, string fileName, string separator = ", ")
+        private static async Task SaveAsTextAsync<T>(IEnumerable<T> data, string fileName, int columns, string separator = ", ")
         {
             var lastCulture = Thread.CurrentThread.CurrentCulture;
             Thread.CurrentThread.CurrentCulture = CultureInfo.GetCultureInfo("en-US");
 
             try
             {
-                var flattenedData = data.FlattenToObjects();
+                var flattenedData = data.FlattenToObjects().ToList();
+                int flattenedDataCount = flattenedData.Count();
 
-                string result = string.Join(separator, flattenedData);
-                await File.AppendAllTextAsync(fileName, result);
+                StringBuilder sb = new StringBuilder();
+
+                for (int i = 0; i < flattenedDataCount; i++)
+                {
+                    // Add line skip after each n-th (= 'columns-th') item to create multiple rows.
+                    if (i != 0 && i % columns == 0)
+                        sb.Append("\n");
+                    sb.Append(flattenedData.ElementAt(i).ToString());
+                    sb.Append(separator);
+                }
+
+                // Remove last comma
+                sb.Remove(sb.Length -1, 1);
+
+                await File.AppendAllTextAsync(fileName, sb.ToString());
             }
             finally
             {
