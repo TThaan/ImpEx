@@ -26,11 +26,11 @@ namespace ImpEx
                 }
             });
         }
-        public static async Task SaveAsJsonAsync<T>(T data, string fileName, bool overWriteExistingFile = false)
+        public static async Task SaveAsJsonAsync<T>(T data, string fileName, Formatting formatting , bool overWriteExistingFile = false)
         {
             DeleteExistingFileIfWanted(fileName, overWriteExistingFile);
 
-            string json = JsonConvert.SerializeObject(data);
+            string json = JsonConvert.SerializeObject(data, formatting);
             await File.AppendAllTextAsync(fileName, json);
         }
         public static async Task<string> SaveAsCSVAsync<T>(IEnumerable<T> data, string fileName, int columns, bool overWriteExistingFile = false)
